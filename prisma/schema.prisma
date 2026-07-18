@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMINISTRATOR
+  CHOIR_DIRECTOR
+  CHORISTER
+}
+
+enum ServiceStatus {
+  DRAFT
+  CONFIRMED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+}
+
+model Song {
+  id           String        @id @default(uuid())
+  title        String
+  composer     String
+  voicing      String
+  difficulty   Int
+  season       String
+  language     String
+  sheetUrl     String?
+  active       Boolean       @default(true)
+  performances Performance[]
+  createdAt    DateTime      @default(now())
+}
+
+model Service {
+  id           String        @id @default(uuid())
+  type         String
+  date         DateTime
+  season       String
+  minSongs     Int
+  maxSongs     Int
+  status       ServiceStatus @default(DRAFT)
+  performances Performance[]
+  createdAt    DateTime      @default(now())
+}
+
+model Performance {
+  id            String   @id @default(uuid())
+  song          Song     @relation(fields: [songId], references: [id])
+  songId        String
+  service       Service  @relation(fields: [serviceId], references: [id])
+  serviceId     String
+  performedDate DateTime
+}
