@@ -1,4 +1,18 @@
 {
+  "name": "rehearsify",
+  "version": "1.0.0",
+  "description": "Choir repertoire planning and recommendation platform",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test tests/",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "prisma db seed"
+  },
   "dependencies": {
     "@prisma/client": "^7.8.0",
     "bcrypt": "^6.0.0",
@@ -14,5 +28,13 @@
   "devDependencies": {
     "prisma": "^7.8.0",
     "supertest": "^7.2.2"
-  }
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "author": "Michael Bamidele Ipadeola, Okuo Iramofu John, John Ughiovhe Oshioriamhe",
+  "license": "UNLICENSED"
 }
