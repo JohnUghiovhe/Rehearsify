@@ -3,6 +3,7 @@
 // Follow the pattern in auth.service.js.
 
 import * as model from './scheduling.model.js';
+import { createMergedUpdateSchema } from './validators.js';
 
 export async function createService(input) {
   const eventType = await model.findEventTypeById(input.eventTypeId);
@@ -37,7 +38,9 @@ export async function updateService(serviceId, updates) {
   if (!service || service.deletedAt) {
     throw Object.assign(new Error('Service not found'), { status: 404 });
   }
-  return model.updateService(serviceId, updates);
+  const schema = createMergedUpdateSchema(service);
+  const validated = schema.parse(updates);
+  return model.updateService(serviceId, validated);
 }
 
 export async function deleteService(serviceId) {

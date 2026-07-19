@@ -33,6 +33,19 @@ CREATE TABLE "Song" (
 );
 
 -- CreateTable
+CREATE TABLE "EventType" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "defaultMinSongs" INTEGER NOT NULL DEFAULT 3,
+    "defaultMaxSongs" INTEGER NOT NULL DEFAULT 8,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "EventType_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Service" (
     "id" TEXT NOT NULL,
     "eventTypeId" TEXT NOT NULL,

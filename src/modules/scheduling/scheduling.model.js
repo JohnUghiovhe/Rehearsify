@@ -31,7 +31,7 @@ export async function findServiceById(id) {
 }
 
 export async function listServices(filters = {}) {
-  const where = { deletedAt: null, ...filters };
+  const where = { ...filters, deletedAt: null };
   return prisma.service.findMany({
     where,
     include: { eventType: true },
