@@ -21,7 +21,7 @@ const eventTypes = [
   },
 ];
 
-async function seedEventTypes() {
+export async function seedEventTypes() {
   for (const eventType of eventTypes) {
     const exists = await prisma.eventType.findUnique({
       where: { name: eventType.name },
@@ -38,5 +38,3 @@ async function seedEventTypes() {
   console.log('EventType seeding complete.');
   await prisma.$disconnect();
 }
-
-export default seedEventTypes;
