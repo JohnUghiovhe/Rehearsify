@@ -19,12 +19,13 @@ enum ServiceStatus {
 }
 
 model User {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   name         String
-  email        String   @unique
+  email        String    @unique
   passwordHash String
   role         Role
-  createdAt    DateTime @default(now())
+  services     Service[]
+  createdAt    DateTime  @default(now())
 }
 
 model Song {
@@ -41,16 +42,42 @@ model Song {
   createdAt    DateTime      @default(now())
 }
 
+model EventType {
+  id              String    @id @default(uuid())
+  name            String    @unique
+  description     String?
+  defaultMinSongs Int       @default(3)
+  defaultMaxSongs Int       @default(8)
+  services        Service[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
 model Service {
   id           String        @id @default(uuid())
-  type         String
+  eventTypeId  String
+  eventType    EventType     @relation(fields: [eventTypeId], references: [id], onDelete: Restrict)
+
   date         DateTime
   season       String
-  minSongs     Int
-  maxSongs     Int
   status       ServiceStatus @default(DRAFT)
-  performances Performance[]
+
+  minSongCount Int?
+  maxSongCount Int?
+
+  deletedAt    DateTime?
+
   createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  createdById  String
+  createdBy    User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  performances Performance[]
+
+  @@index([date])
+  @@index([status])
+  @@index([status, date])
 }
 
 model Performance {
