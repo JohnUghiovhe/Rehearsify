@@ -1,6 +1,6 @@
 import { seedEventTypes } from './eventTypes.seed.js';
 // import { seedUsers } from './users.seed.js';       // add once written
-// import { seedSongs } from './songs.seed.js';         // add once written
+import { seedSongs } from './songs.seed.js';         // add once written
 // import { seedPerformances } from './performances.seed.js'; // add once written
 
 // Order matters — respects foreign key dependencies.
@@ -10,7 +10,7 @@ import { seedEventTypes } from './eventTypes.seed.js';
 async function main() {
   await seedEventTypes();
   // await seedUsers();
-  // await seedSongs();
+  await seedSongs();
   // await seedPerformances();
   console.log('All seeding complete.');
 }
