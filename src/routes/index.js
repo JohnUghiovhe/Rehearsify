@@ -13,6 +13,15 @@ import planningRoutes from '../modules/planning-reporting/planning.routes.js';
 
 const router = Router();
 
+router.get('/health', async (req, res) =>{
+    try {
+        await prisma.$queryRaw`SELECT 1`;
+        res.status(200).json({ status: 'ok', database: 'reachable' });
+    } catch(err) {
+        res.status(503).json({ status: 'error', database: 'unreachable', error: err.message });
+    }
+});
+
 router.use('/auth', authRoutes);
 router.use('/songs', repertoireRoutes);
 router.use('/services', schedulingRoutes);
