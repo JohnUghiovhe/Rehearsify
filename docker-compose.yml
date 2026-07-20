@@ -9,7 +9,7 @@ services: # this is a list of services we are configuring and running in Docker 
       POSTGRES_PASSWORD: rehearsify_dev_password # Set the PostgreSQL dev password
       POSTGRES_DB: rehearsify # Set the PostgreSQL database name
     ports:
-      - "5433:5432" # Map to 5433 to avoid conflict with local PostgreSQL on 5432
+      - "5432:5432" # Map the container's PostgreSQL port to the host machine's port
     volumes:
       - rehearsify_pgdata:/var/lib/postgresql/data # Mount the PostgreSQL data directory
     healthcheck:

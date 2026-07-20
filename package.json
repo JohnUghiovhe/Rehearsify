@@ -11,8 +11,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "prisma db seed",
-    "db:seed": "node src/db/seeds/eventTypes.seed.js"
+    "prisma:seed": "prisma db seed"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -32,7 +31,7 @@
     "supertest": "^7.2.2"
   },
   "prisma": {
-    "seed": "node src/db/seeds/eventTypes.seed.js"
+    "seed": "node prisma/seed.js"
   },
   "engines": {
     "node": ">=20.0.0"
