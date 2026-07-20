@@ -41,7 +41,4 @@ async function seedEventTypes() {
   await prisma.$disconnect();
 }
 
-seedEventTypes().catch((e) => {
-  console.error('Seed failed:', e);
-  process.exit(1);
-});
+export default seedEventTypes;
