@@ -25,7 +25,7 @@ export async function register({ name, email, password, role }) {
 
   }
   const passwordHash = await hashPassword(password);
-  const user = await authModel.createUser({ name, email, passwordHash, role });
+  const user = await authModel.createUser({ name, email, passwordHash, role: 'CHORISTER' });
   const token = signToken(user);
   return { user, token };
 }
