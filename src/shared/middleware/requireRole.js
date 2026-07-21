@@ -4,9 +4,18 @@
 
 export default function requireRole(...allowedRoles) {
   return (req, res, next) => {
-    // TODO: check req.user exists (requireAuth ran first)
-    // TODO: check req.user.role is in allowedRoles
-    // TODO: reject with 403 if not
+    // check req.user exists (requireAuth ran first)
+    if (!req.user){
+      const err = new Error("Unauthorized");
+      err.statusCode = 401;
+      return next(err);
+    }
+    //check req.user.role is in allowedRoles
+    if (!allowedRoles.includes(req.user.role)){
+      const err = new Error("Forbidden");
+      err.statusCode = 403;
+      return next(err);
+    }
     next();
   };
 }
