@@ -10,6 +10,8 @@ const app = express();
 
 // middleware to parse incoming JSON requests and put the parsed data in req.body
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 
 app.use('/api', routes);
 
