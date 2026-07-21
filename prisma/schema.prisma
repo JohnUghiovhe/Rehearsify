@@ -74,6 +74,7 @@ model Service {
   createdBy    User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   performances Performance[]
+  planningDraft PlanningDraft?
 
   @@index([date])
   @@index([status])
@@ -87,4 +88,17 @@ model Performance {
   service       Service  @relation(fields: [serviceId], references: [id])
   serviceId     String
   performedDate DateTime
+}
+
+model PlanningDraft {
+  id              String   @id @default(uuid())
+  serviceId       String   @unique
+  service         Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  songIds         String[]
+  manualAdditions String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  @@index([serviceId])
 }
