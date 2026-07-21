@@ -20,6 +20,12 @@ export function findDraftByServiceId(serviceId) {
   });
 }
 
+export function findActiveDraftByServiceId(serviceId) {
+  return prisma.planningDraft.findFirst({
+    where: { serviceId, deletedAt: null },
+  });
+}
+
 export function createDraft(data) {
   return prisma.planningDraft.create({ data });
 }
@@ -32,5 +38,19 @@ export function softDeleteDraft(id) {
   return prisma.planningDraft.update({
     where: { id },
     data: { deletedAt: new Date() },
+  });
+}
+
+export function restoreDraft(id, data) {
+  return prisma.planningDraft.update({
+    where: { id },
+    data: { ...data, deletedAt: null },
+  });
+}
+
+export function updateDraftSongs(id, songIds, manualAdditions) {
+  return prisma.planningDraft.update({
+    where: { id },
+    data: { songIds, manualAdditions },
   });
 }
