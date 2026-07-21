@@ -54,3 +54,12 @@ export async function getDraftHandler(req, res, next) {
     next(err);
   }
 }
+
+export async function deleteDraftHandler(req, res, next) {
+  try {
+    await service.deleteDraft(req.params.draftId);
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+}
