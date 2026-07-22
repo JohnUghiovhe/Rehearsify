@@ -11,3 +11,9 @@ export const loginSchema = z.object({
 
   password: z.string().min(1, "Password is required")
 });
+
+export const changeRoleSchema = z.object({
+  role: z.enum(['ADMINISTRATOR', 'CHOIR_DIRECTOR', 'CHORISTER'], {
+    errorMap: () => ({ message: 'Role must be ADMINISTRATOR, CHOIR_DIRECTOR, or CHORISTER' }),
+  }),
+});
