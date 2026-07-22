@@ -1,12 +1,21 @@
 import { Router } from 'express';
+import requireAuth from '../../shared/middleware/requireAuth.js';
+import {
+  fetchServiceHandler,
+  createDraftHandler,
+  addSongToDraftHandler,
+  removeSongFromDraftHandler,
+  getDraftHandler,
+  deleteDraftHandler,
+} from './planning.controller.js';
 
 const router = Router();
 
-// TODO: getServicePlan, updatePlanSongs, confirmPlan, getHealthDashboard
-// See PRD PLAN-1, PLAN-2, PLAN-3, RPT-1/2/3
-
-router.get('/', (req, res) => {
-  res.status(501).json({ error: { message: 'planning routes not implemented yet' } });
-});
+router.get('/service/:id', requireAuth, fetchServiceHandler);
+router.post('/draft', requireAuth, createDraftHandler);
+router.get('/draft/:draftId', requireAuth, getDraftHandler);
+router.post('/draft/:draftId/song/:songId', requireAuth, addSongToDraftHandler);
+router.delete('/draft/:draftId/song/:songId', requireAuth, removeSongFromDraftHandler);
+router.delete('/draft/:draftId', requireAuth, deleteDraftHandler);
 
 export default router;
