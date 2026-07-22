@@ -3,12 +3,14 @@ import { ZodError } from "zod";
 export default function validate(schema, source = 'body') {
   return (req, res, next) => {
     try {
-      const target = source === 'query' ? req.query : req.body;
-      const parsed = schema.parse(target);
       if (source === 'query') {
-        req.query = parsed;
+        const parsed = schema.parse(req.query);
+        for (const key of Object.keys(req.query)) {
+          delete req.query[key];
+        }
+        Object.assign(req.query, parsed);
       } else {
-        req.body = parsed;
+        req.body = schema.parse(req.body);
       }
       next();
     } catch (err) {
