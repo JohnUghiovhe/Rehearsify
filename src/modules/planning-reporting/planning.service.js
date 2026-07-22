@@ -16,8 +16,9 @@ function assertDraftActive(draft) {
 
 function buildEnrichedResponse(draft, songs) {
   const songMap = new Map(songs.map((s) => [s.id, s]));
+  const allIds = [...new Set([...draft.songIds, ...draft.manualAdditions])];
 
-  const enrichedSongs = draft.songIds
+  const enrichedSongs = allIds
     .filter((id) => songMap.has(id))
     .map((id) => {
       const song = songMap.get(id);
@@ -130,9 +131,7 @@ export async function removeSongFromDraft(draftId, songId) {
 
 export async function getDraft(draftId) {
   const draft = await model.findDraftById(draftId);
-  if (!draft || draft.deletedAt) {
-    throw Object.assign(new Error('Draft not found'), { statusCode: 404 });
-  }
+  assertDraftActive(draft);
 
   const songs = await model.findSongsByIds(draft.songIds);
   return buildEnrichedResponse(draft, songs);
@@ -140,9 +139,7 @@ export async function getDraft(draftId) {
 
 export async function deleteDraft(draftId) {
   const draft = await model.findDraftById(draftId);
-  if (!draft || draft.deletedAt) {
-    throw Object.assign(new Error('Draft not found'), { statusCode: 404 });
-  }
+  assertDraftActive(draft);
   return model.softDeleteDraft(draftId);
 }
 
@@ -174,7 +171,7 @@ export async function listDrafts(filters) {
       where,
       orderBy: { createdAt: 'asc' },
       skip: 0,
-      take: 1000,
+      take: undefined,
     });
 
     const allSongs = await model.findSongsByIds(
@@ -213,8 +210,16 @@ export async function listDrafts(filters) {
     model.countDrafts(where),
   ]);
 
+  const allSongs = await model.findSongsByIds(
+    drafts.flatMap((d) => d.songIds),
+  );
+  const songMap = new Map(allSongs.map((s) => [s.id, s]));
+
   return {
-    drafts,
+    drafts: drafts.map((d) => ({
+      ...d,
+      songCount: d.songIds.filter((id) => songMap.has(id)).length,
+    })),
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   };
 }
@@ -239,18 +244,23 @@ export async function cloneDraft(draftId, targetServiceId) {
     });
   }
 
-  return model.createDraft({
-    serviceId: targetServiceId,
-    songIds: [...sourceDraft.songIds],
-    manualAdditions: [...sourceDraft.manualAdditions],
-  });
+  try {
+    return await model.createDraft({
+      serviceId: targetServiceId,
+      songIds: [...sourceDraft.songIds],
+      manualAdditions: [...sourceDraft.manualAdditions],
+    });
+  } catch (err) {
+    if (err.code === 'P2002' && err.meta?.modelName === 'PlanningDraft') {
+      throw Object.assign(new Error('Draft already exists for target service'), { statusCode: 409 });
+    }
+    throw err;
+  }
 }
 
 export async function clearDraft(draftId) {
   const draft = await model.findDraftById(draftId);
-  if (!draft || draft.deletedAt) {
-    throw Object.assign(new Error('Draft not found'), { statusCode: 404 });
-  }
+  assertDraftActive(draft);
 
   return model.updateDraftSongs(draftId, [], []);
 }

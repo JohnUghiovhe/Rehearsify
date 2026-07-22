@@ -76,7 +76,9 @@ describe('Planning Module Integration', () => {
   });
 
   after(async () => {
-    await prisma.planningDraft.deleteMany();
+    await prisma.planningDraft.deleteMany({
+      where: { serviceId: { in: [testServiceId, testServiceId2] } },
+    });
     await prisma.service.deleteMany({ where: { createdById: testUserId } });
     await prisma.user.delete({ where: { id: testUserId } }).catch(() => {});
   });
