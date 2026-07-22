@@ -5,10 +5,12 @@ export default function validate(schema, source = 'body') {
     try {
       if (source === 'query') {
         const parsed = schema.parse(req.query);
-        for (const key of Object.keys(req.query)) {
-          delete req.query[key];
-        }
-        Object.assign(req.query, parsed);
+        Object.defineProperty(req, 'query', {
+          value: parsed,
+          writable: true,
+          configurable: true,
+          enumerable: true,
+        });
       } else {
         req.body = schema.parse(req.body);
       }

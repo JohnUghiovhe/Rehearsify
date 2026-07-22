@@ -67,8 +67,8 @@ export async function listDrafts({ where, orderBy, skip, take }) {
       },
     },
     orderBy,
-    skip,
-    take,
+    ...(skip != null && { skip }),
+    ...(take != null && { take }),
   });
 }
 
