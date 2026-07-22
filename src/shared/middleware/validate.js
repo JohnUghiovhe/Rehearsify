@@ -1,9 +1,14 @@
 import { ZodError } from "zod";
 
-export default function validate(schema) {
+/**
+ * Validates request data against a Zod schema.
+ * @param {import('zod').ZodSchema} schema 
+ * @param {'body' | 'query' | 'params'} target - Defaults to 'body'
+ */
+export default function validate(schema, target = 'body') {
   return (req, res, next) => {
     try {
-      req.body = schema.parse(req.body);
+      req[target] = schema.parse(req[target]);
       next();
     } catch (err) {
       if (err instanceof ZodError) {
