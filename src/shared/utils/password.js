@@ -1,4 +1,4 @@
-// To handle pasasword hashing and compare password
+// To handle password hashing and compare password
 
 import bcrypt from 'bcrypt';
 
