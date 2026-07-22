@@ -1,13 +1,12 @@
 import { z } from 'zod';
 
-// Object.freeze prevents accidental runtime modifications
-export const SEASONS = Object.freeze([
+export const SEASONS = [
   'ADVENT',
   'CHRISTMAS',
   'LENT',
   'EASTER',
   'PENTECOST',
   'ORDINARY',
-]);
+];
 
 export const seasonSchema = z.enum(SEASONS);

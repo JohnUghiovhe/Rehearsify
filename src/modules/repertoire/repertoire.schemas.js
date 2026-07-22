@@ -5,7 +5,7 @@ export const createSongSchema = z.object({
   title: z.string().trim().min(1, 'Title is required'),
   composer: z.string().trim().min(1, 'Composer is required'),
   voicing: z.string().trim().min(1, 'Voicing is required'),
-  difficulty: z.number().int().min(1).max(5),
+  difficulty: z.number().int().min(1, 'Difficulty must be at least 1').max(5, 'Difficulty cannot exceed 5'),
   season: seasonSchema,
   language: z.string().trim().min(1, 'Language is required'),
   sheetUrl: z.string().url().optional(),
