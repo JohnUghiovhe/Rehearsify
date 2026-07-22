@@ -14,7 +14,7 @@ function signToken(user) {
     { expiresIn: config.jwt.expiresIn }
   );
 }
-export async function register({ name, email, password, role }) {
+export async function register({ name, email, password}) {
   // check email isn't already taken (authModel.findUserByEmail)
   if (await authModel.findUserByEmail(email)) {
     // throw a generic "email already taken" error
@@ -25,6 +25,7 @@ export async function register({ name, email, password, role }) {
 
   }
   const passwordHash = await hashPassword(password);
+  // assign default role for public registrations to be chorister
   const user = await authModel.createUser({ name, email, passwordHash, role: 'CHORISTER' });
   const token = signToken(user);
   return { user, token };
