@@ -12,7 +12,8 @@ export async function registerHandler(req, res, next) {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role },
+        role: user.role
+      },
         token
       });
   } catch (err) {
