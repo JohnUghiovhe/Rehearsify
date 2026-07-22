@@ -1,9 +1,15 @@
 import { ZodError } from "zod";
 
-export default function validate(schema) {
+export default function validate(schema, source = 'body') {
   return (req, res, next) => {
     try {
-      req.body = schema.parse(req.body);
+      const target = source === 'query' ? req.query : req.body;
+      const parsed = schema.parse(target);
+      if (source === 'query') {
+        req.query = parsed;
+      } else {
+        req.body = parsed;
+      }
       next();
     } catch (err) {
       if (err instanceof ZodError) {
