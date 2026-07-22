@@ -53,6 +53,13 @@ export async function login({ email, password }) {
   return { user, token };
 }
 
+// check if user exists before trying to change their role
 export async function changeUserRole(id, newRole) {
+  const user = await authModel.findUserById(id);
+  if (!user) {
+    const err = new Error('User not found');
+    err.statusCode = 404;
+    throw err;
+  }
   return authModel.updateUserRole(id, newRole);
 }
