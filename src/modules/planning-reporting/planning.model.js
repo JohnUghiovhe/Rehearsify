@@ -54,3 +54,38 @@ export function updateDraftSongs(id, songIds, manualAdditions) {
     data: { songIds, manualAdditions },
   });
 }
+
+export async function listDrafts({ where, orderBy, skip, take }) {
+  return prisma.planningDraft.findMany({
+    where,
+    include: {
+      service: {
+        include: {
+          eventType: { select: { id: true, name: true } },
+          createdBy: { select: { id: true, name: true } },
+        },
+      },
+    },
+    orderBy,
+    skip,
+    take,
+  });
+}
+
+export async function countDrafts(where) {
+  return prisma.planningDraft.count({ where });
+}
+
+export async function findSongsByIds(ids) {
+  if (!ids.length) return [];
+  return prisma.song.findMany({
+    where: { id: { in: ids }, active: true },
+    select: {
+      id: true,
+      title: true,
+      difficulty: true,
+      season: true,
+      voicing: true,
+    },
+  });
+}
