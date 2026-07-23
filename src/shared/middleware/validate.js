@@ -1,18 +1,23 @@
 import { ZodError } from "zod";
 
-export default function validate(schema, source = 'body') {
+/**
+ * Validates request data against a Zod schema.
+ * @param {import('zod').ZodSchema} schema 
+ * @param {'body' | 'query' | 'params'} target - Defaults to 'body'
+ */
+export default function validate(schema, target = 'body') {
   return (req, res, next) => {
     try {
-      if (source === 'query') {
-        const parsed = schema.parse(req.query);
+      const parsedData = schema.parse(req[target]);
+      if (target === 'query') {
         Object.defineProperty(req, 'query', {
-          value: parsed,
+          value: parsedData,
           writable: true,
           configurable: true,
           enumerable: true,
         });
       } else {
-        req.body = schema.parse(req.body);
+        req[target] = parsedData;
       }
       next();
     } catch (err) {
