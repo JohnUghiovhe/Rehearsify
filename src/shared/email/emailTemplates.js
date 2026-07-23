@@ -16,8 +16,16 @@ function formatDuration(totalSeconds) {
 
 function formatDate(dateStr) {
   if (!dateStr) return 'TBD';
-  const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return String(dateStr);
+  const str = String(dateStr);
+  const dateOnlyMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  let d;
+  if (dateOnlyMatch) {
+    const [, year, month, day] = dateOnlyMatch;
+    d = new Date(Number(year), Number(month) - 1, Number(day));
+  } else {
+    d = new Date(str);
+  }
+  if (Number.isNaN(d.getTime())) return str;
   return d.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -152,7 +160,7 @@ export function draftPreview(data) {
           ${formatDuration(song.duration)}
         </td>
         <td style="padding:10px 12px;border-bottom:1px solid #eeeeee;font-size:14px;color:#555555;text-align:center;white-space:nowrap;">
-          ${song.difficulty || 'N/A'}
+          ${escapeHtml(song.difficulty || 'N/A')}
         </td>
       </tr>`;
     })
