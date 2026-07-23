@@ -45,3 +45,27 @@ export async function deleteSongHandler(req, res, next) {
     next(err);
   }
 }
+
+export async function uploadSheetHandler(req, res, next) {
+  try {
+    if (!req.file) {
+      const err = new Error('No file uploaded');
+      err.statusCode = 400;
+      throw err;
+    }
+    const song = await repertoireService.uploadSheet(req.params.id, req.file.buffer);
+    res.status(200).json({ song });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteSheetHandler(req, res, next) {
+  // try to get the url id and fetch in the database
+  try {
+    const song = await repertoireService.deleteSheet(req.params.id);
+    res.status(200).json({ song });
+  } catch (err) {
+    next(err);
+  }
+}

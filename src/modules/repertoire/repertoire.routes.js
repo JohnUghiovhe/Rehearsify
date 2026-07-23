@@ -1,5 +1,7 @@
 import { Router } from 'express';
 
+import multer from 'multer';
+
 import validate from '../../shared/middleware/validate.js';
 import requireAuth from '../../shared/middleware/requireAuth.js';
 import requireRole from '../../shared/middleware/requireRole.js';
@@ -14,6 +16,8 @@ import {
   getSongHandler,
   updateSongHandler,
   deleteSongHandler,
+  uploadSheetHandler,
+  deleteSheetHandler
 } from './repertoire.controller.js';
 
 const router = Router();
@@ -28,9 +32,22 @@ router.get('/:id', getSongHandler);
 
 const requireManager = requireRole('ADMINISTRATOR', 'CHOIR_DIRECTOR');
 
+// Multer
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10 MB cap
+  },
+})
+
+
 // Only directors/admins can add, edit, or remove songs
 router.post('/', requireManager, validate(createSongSchema), createSongHandler);
 router.patch('/:id', requireManager, validate(updateSongSchema), updateSongHandler);
 router.delete('/:id', requireManager, deleteSongHandler);
+// Only choir directors can upload song sheets --> form field must be named "sheet"
+router.post('/:id/sheet', requireManager, upload.single('sheet'), uploadSheetHandler);
+// only choir directors can delete song sheets
+router.delete('/:id/sheet', requireManager, upload.single('sheet'), deleteSheetHandler);
 
 export default router;
