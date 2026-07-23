@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "dev": "node --watch src/server.js",
+    "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "test": "node --test tests/**/*.test.js",
     "prisma:generate": "prisma generate",
@@ -14,7 +14,7 @@
     "prisma:seed": "prisma db seed",
     "db:seed": "node src/db/seeds/index.js",
     "db:test": "node src/db/testConnection.js"
-  }, 
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Rehearsify/rehearsify.git"
@@ -29,6 +29,7 @@
     "multer": "^2.2.0",
     "node-cron": "^4.6.0",
     "nodemailer": "^9.0.3",
+    "nodemon": "^3.1.14",
     "zod": "^4.4.3"
   },
   "devDependencies": {
