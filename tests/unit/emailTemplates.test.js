@@ -67,8 +67,7 @@ describe('emailTemplates', () => {
 
     it('formats the service date', () => {
       const result = draftConfirmation(baseData);
-      assert.ok(result.text.includes('July'));
-      assert.ok(result.text.includes('2026'));
+      assert.ok(result.text.includes('Sunday, July 26, 2026'));
     });
 
     it('handles missing optional fields gracefully', () => {

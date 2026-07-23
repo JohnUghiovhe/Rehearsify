@@ -28,7 +28,15 @@ const config = {
     fromAddress: process.env.EMAIL_FROM_ADDRESS,
     smtp: {
       host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined,
+      port: (() => {
+        const raw = process.env.SMTP_PORT;
+        if (!raw) return undefined;
+        const parsed = Number(raw);
+        if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
+          throw new Error(`Invalid SMTP_PORT: "${raw}" — must be an integer between 1 and 65535`);
+        }
+        return parsed;
+      })(),
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
