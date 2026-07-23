@@ -1,5 +1,6 @@
 import * as model from './planning.model.js';
 import * as schedulingService from '../scheduling/index.js';
+import * as repertoireService from '../repertoire/repertoire.service.js';
 import prisma from '../../shared/db.js';
 
 const DURATION_BY_DIFFICULTY = { 1: 120, 2: 180, 3: 240, 4: 300, 5: 360 };
@@ -80,11 +81,8 @@ export async function createDraft(input) {
   }
 }
 
-export async function addSongToDraft(draftId, songId, actor) {
-  const song = await prisma.song.findUnique({ where: { id: songId } });
-  if (!song) {
-    throw Object.assign(new Error('Song not found'), { statusCode: 404 });
-  }
+export async function addSongToDraft(draftId, songId) {
+  await repertoireService.getSongById(songId);
 
   return prisma.$transaction(async (tx) => {
     const draft = await tx.planningDraft.findUnique({
@@ -166,6 +164,9 @@ export async function listDrafts(filters) {
   const skip = (page - 1) * limit;
   const take = limit;
 
+  // TODO: songCount sort fetches all drafts in memory because songCount is computed
+  // from the songIds array — not a DB column. Fine for seed data volumes, but will
+  // need a materialised songCount column or similar if drafts/songs grow large.
   if (sortBy === 'songCount') {
     const allDrafts = await model.listDrafts({
       where,
