@@ -14,7 +14,7 @@
     "prisma:seed": "prisma db seed",
     "db:seed": "node src/db/seeds/index.js",
     "db:test": "node src/db/testConnection.js"
-  },
+  }, 
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Rehearsify/rehearsify.git"
