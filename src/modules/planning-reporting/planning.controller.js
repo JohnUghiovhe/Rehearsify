@@ -26,7 +26,6 @@ export async function addSongToDraftHandler(req, res, next) {
     const result = await service.addSongToDraft(
       req.params.draftId,
       req.params.songId,
-      req.user,
     );
     res.json({ data: result });
   } catch (err) {
@@ -59,6 +58,33 @@ export async function deleteDraftHandler(req, res, next) {
   try {
     await service.deleteDraft(req.params.draftId);
     res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function listDraftsHandler(req, res, next) {
+  try {
+    const result = await service.listDrafts(req.query);
+    res.json({ data: result.drafts, pagination: result.pagination });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function cloneDraftHandler(req, res, next) {
+  try {
+    const result = await service.cloneDraft(req.params.draftId, req.body.targetServiceId);
+    res.status(201).json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function clearDraftHandler(req, res, next) {
+  try {
+    const result = await service.clearDraft(req.params.draftId);
+    res.json({ data: result });
   } catch (err) {
     next(err);
   }

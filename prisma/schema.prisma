@@ -101,4 +101,6 @@ model PlanningDraft {
   deletedAt       DateTime?
 
   @@index([serviceId])
+  @@index([createdAt])
+  @@index([deletedAt])
 }
