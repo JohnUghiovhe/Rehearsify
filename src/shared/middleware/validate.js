@@ -8,7 +8,17 @@ import { ZodError } from "zod";
 export default function validate(schema, target = 'body') {
   return (req, res, next) => {
     try {
-      req[target] = schema.parse(req[target]);
+      const parsedData = schema.parse(req[target]);
+      if (target === 'query') {
+        Object.defineProperty(req, 'query', {
+          value: parsedData,
+          writable: true,
+          configurable: true,
+          enumerable: true,
+        });
+      } else {
+        req[target] = parsedData;
+      }
       next();
     } catch (err) {
       if (err instanceof ZodError) {
