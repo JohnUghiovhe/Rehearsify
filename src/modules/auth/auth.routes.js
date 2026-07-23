@@ -1,6 +1,9 @@
 import { Router } from 'express';
 
 import validate from '../../shared/middleware/validate.js';
+import requireAuth from '../../shared/middleware/requireAuth.js';
+import requireRole from '../../shared/middleware/requireRole.js';
+
 import { registerSchema, loginSchema, changeRoleSchema } from './auth.schemas.js';
 import { registerHandler, loginHandler, changeRoleHandler } from './auth.controller.js';
 
