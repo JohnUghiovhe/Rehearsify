@@ -26,7 +26,6 @@ export async function addSongToDraftHandler(req, res, next) {
     const result = await service.addSongToDraft(
       req.params.draftId,
       req.params.songId,
-      req.user,
     );
     res.json({ data: result });
   } catch (err) {
