@@ -12,7 +12,7 @@ const router = Router();
 router.use(requireAuth);
 
 // Read endpoints
-router.get('/last-performed', getLastPerformedHandler);
-router.get('/counts', getPerformanceCountsHandler);
+router.post('/last-performed', getLastPerformedHandler);
+router.post('/counts', getPerformanceCountsHandler);
 
 export default router;

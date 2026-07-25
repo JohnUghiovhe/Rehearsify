@@ -1,12 +1,35 @@
 import { Router } from 'express';
+import requireAuth from '../../shared/middleware/requireAuth.js';
+import validate from '../../shared/middleware/validate.js';
+import {
+  createDraftSchema,
+  cloneDraftSchema,
+  listDraftsQuerySchema,
+} from './planning.schemas.js';
+import {
+  fetchServiceHandler,
+  createDraftHandler,
+  addSongToDraftHandler,
+  removeSongFromDraftHandler,
+  getDraftHandler,
+  deleteDraftHandler,
+  listDraftsHandler,
+  cloneDraftHandler,
+  clearDraftHandler,
+} from './planning.controller.js';
 
 const router = Router();
 
-// TODO: getServicePlan, updatePlanSongs, confirmPlan, getHealthDashboard
-// See PRD PLAN-1, PLAN-2, PLAN-3, RPT-1/2/3
+router.get('/service/:id', requireAuth, fetchServiceHandler);
 
-router.get('/', (req, res) => {
-  res.status(501).json({ error: { message: 'planning routes not implemented yet' } });
-});
+router.get('/drafts', requireAuth, validate(listDraftsQuerySchema, 'query'), listDraftsHandler);
+
+router.post('/draft', requireAuth, validate(createDraftSchema), createDraftHandler);
+router.get('/draft/:draftId', requireAuth, getDraftHandler);
+router.post('/draft/:draftId/song/:songId', requireAuth, addSongToDraftHandler);
+router.delete('/draft/:draftId/song/:songId', requireAuth, removeSongFromDraftHandler);
+router.patch('/draft/:draftId/clear', requireAuth, clearDraftHandler);
+router.post('/draft/:draftId/clone', requireAuth, validate(cloneDraftSchema), cloneDraftHandler);
+router.delete('/draft/:draftId', requireAuth, deleteDraftHandler);
 
 export default router;
