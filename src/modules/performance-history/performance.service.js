@@ -5,15 +5,8 @@ import * as model from './performance.model.js';
 
 export async function logPerformances(serviceId, songIds) {
   const performedDate = new Date();
-
-  return Promise.all(
-    songIds.map((songId) =>
-      model.createPerformance({
-        serviceId,
-        songId,
-        performedDate,
-      })
-    )
+  return model.createManyPerformances(
+    songIds.map((songId) => ({ serviceId, songId, performedDate }))
   );
 }
 

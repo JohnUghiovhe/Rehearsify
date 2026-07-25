@@ -5,10 +5,14 @@ import {
   getPerformanceCountsHandler,
 } from './performance.controller.js';
 
+import requireAuth from '../../shared/middleware/requireAuth.js';
+
 const router = Router();
 
-// Read endpoints
-router.post('/last-performed', getLastPerformedHandler);
-router.post('/counts', getPerformanceCountsHandler);
+router.use(requireAuth);
 
-export default router;  
+// Read endpoints
+router.get('/last-performed', getLastPerformedHandler);
+router.get('/counts', getPerformanceCountsHandler);
+
+export default router;
