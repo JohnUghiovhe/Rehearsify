@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
     await model.checkDatabase();
     res.status(200).json({ status: 'ok', database: 'reachable' });
   } catch (err) {
-    res.status(503).json({ status: 'error', database: 'unreachable', error: err.message });
+    res.status(503).json({ status: 'error', database: 'unreachable' });
   }
 });
 
