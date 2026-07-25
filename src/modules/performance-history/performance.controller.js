@@ -1,13 +1,11 @@
 // Thin HTTP layer for performance-history read endpoints.
 
-// Thin HTTP layer for performance-history.
-// Calls performance.service.js and shapes responses.
-
 import * as service from './performance.service.js';
+import { songIdsSchema } from './performance.schemas.js';
 
 export async function getLastPerformedHandler(req, res, next) {
   try {
-    const { songIds } = req.body;
+    const { songIds } = songIdsSchema.parse(req.body);
 
     const result = await service.getLastPerformedMap(songIds);
 
@@ -21,7 +19,7 @@ export async function getLastPerformedHandler(req, res, next) {
 
 export async function getPerformanceCountsHandler(req, res, next) {
   try {
-    const { songIds } = req.body;
+    const { songIds } = songIdsSchema.parse(req.body);
 
     const result = await service.getPerformanceCounts(songIds);
 

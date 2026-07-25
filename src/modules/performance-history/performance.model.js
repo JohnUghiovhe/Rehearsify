@@ -2,8 +2,8 @@
 
 import prisma from '../../shared/db.js';
 
-export async function createPerformance(data) {
-  return prisma.performance.create({
+export async function createManyPerformances(data) {
+  return prisma.performance.createMany({
     data,
   });
 }
