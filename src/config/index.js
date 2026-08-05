@@ -24,9 +24,22 @@ const config = {
     lookaheadDays: Number(process.env.JOB_LOOKAHEAD_DAYS) || 7,
   },
   email: {
-    // filled in once we pick an email provider in the Planning/Job blocks
     apiKey: process.env.EMAIL_API_KEY,
     fromAddress: process.env.EMAIL_FROM_ADDRESS,
+    smtp: {
+      host: process.env.SMTP_HOST,
+      port: (() => {
+        const raw = process.env.SMTP_PORT;
+        if (!raw) return undefined;
+        const parsed = Number(raw);
+        if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
+          throw new Error(`Invalid SMTP_PORT: "${raw}" — must be an integer between 1 and 65535`);
+        }
+        return parsed;
+      })(),
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
   },
   cloudinary: {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME,
