@@ -23,23 +23,25 @@ model User {
   name         String
   email        String    @unique
   passwordHash String
-  role         Role
+  role         Role      @default(CHORISTER)
   services     Service[]
   createdAt    DateTime  @default(now())
 }
 
 model Song {
-  id           String        @id @default(uuid())
-  title        String
-  composer     String
-  voicing      String
-  difficulty   Int
-  season       String
-  language     String
-  sheetUrl     String?
-  active       Boolean       @default(true)
-  performances Performance[]
-  createdAt    DateTime      @default(now())
+  id                String        @id @default(uuid())
+  title             String
+  composer          String
+  voicing           String
+  difficulty        Int
+  season            String
+  language          String
+  sheetUrl          String?
+  sheetPublicId     String?
+  sheetResourceType String?
+  active            Boolean       @default(true)
+  performances      Performance[]
+  createdAt         DateTime      @default(now())
 }
 
 model EventType {
