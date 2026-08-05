@@ -19,3 +19,7 @@ export const listSongsQuerySchema = z.object({
   difficulty: z.coerce.number().int().min(1).max(5).optional(),
   active: z.coerce.boolean().optional(),
 });
+
+export const idParamSchema = z.object({
+  id: z.string().uuid('Invalid song id'),
+});
