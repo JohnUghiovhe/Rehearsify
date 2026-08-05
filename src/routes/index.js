@@ -11,17 +11,11 @@ import schedulingRoutes from '../modules/scheduling/scheduling.routes.js';
 import performanceRoutes from '../modules/performance-history/performance.routes.js';
 import recommendationRoutes from '../modules/recommendation/recommendation.routes.js';
 import planningRoutes from '../modules/planning-reporting/planning.routes.js';
+import healthRoutes from '../modules/health/health.routes.js';
 
 const router = Router();
 
-router.get('/health', async (req, res) =>{
-    try {
-        await prisma.$queryRaw`SELECT 1`;
-        res.status(200).json({ status: 'ok', database: 'reachable' });
-    } catch(err) {
-        res.status(503).json({ status: 'error', database: 'unreachable', error: err.message });
-    }
-});
+router.use('/health', healthRoutes);
 
 router.use('/auth', authRoutes);
 router.use('/songs', repertoireRoutes);

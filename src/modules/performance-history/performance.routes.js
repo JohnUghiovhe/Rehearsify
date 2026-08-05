@@ -1,12 +1,18 @@
 import { Router } from 'express';
 
+import {
+  getLastPerformedHandler,
+  getPerformanceCountsHandler,
+} from './performance.controller.js';
+
+import requireAuth from '../../shared/middleware/requireAuth.js';
+
 const router = Router();
 
-// TODO: mostly internal — logPerformances fires on confirm, not a manual POST.
-// Expose read endpoints as needed (e.g. GET /performances/:songId)
+router.use(requireAuth);
 
-router.get('/', (req, res) => {
-  res.status(501).json({ error: { message: 'performance routes not implemented yet' } });
-});
+// Read endpoints
+router.post('/last-performed', getLastPerformedHandler);
+router.post('/counts', getPerformanceCountsHandler);
 
 export default router;
