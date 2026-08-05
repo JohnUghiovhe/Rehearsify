@@ -65,24 +65,33 @@ export async function softDeleteSong(id) {
 
 export async function uploadSheet(id, fileBuffer) {
   // first confirm the song exists
-  const song = await getSongById(id); // Throws 404 if missing
+  const song = await getSongById(id);
 
-  // upload to cloudinary with a promise
-  const result = await new Promise((resolve, reject) => {
-    // stream the
-    const stream = cloudinary.uploader.upload_stream(
-      { resource_type: "auto", folder: "rehearsify/song-sheets" },
-      (err, res) => (err ? reject(err) : resolve(res)),
-    );
-    stream.end(fileBuffer);
-  });
+  let result;
+  try {
+    result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { resource_type: 'auto', folder: 'rehearsify/song-sheets' },
+        (err, res) => (err ? reject(err) : resolve(res))
+      );
+      stream.end(fileBuffer);
+    });
+  } catch (err) {
+    const uploadErr = new Error(`Failed to upload sheet for song ${id}: ${err.message}`);
+    uploadErr.statusCode = 502;
+    throw uploadErr;
+  }
 
   // if replacing an existing sheet, clean up the old Cloudinary asset
   if (song.sheetPublicId) {
-    // it can be an image, it can be a PDF
-    await cloudinary.uploader.destroy(song.sheetPublicId, {
-      resource_type: song.sheetResourceType,
-    });
+    try {
+      await cloudinary.uploader.destroy(song.sheetPublicId, {
+        resource_type: song.sheetResourceType,
+      });
+    } catch (err) {
+      console.warn(`Failed to destroy old Cloudinary asset ${song.sheetPublicId} for song ${id}:`, err.message);
+      // Non-fatal — proceed with DB update so the replace still succeeds for the user
+    }
   }
 
   return repertoireModel.updateSong(id, {
@@ -93,14 +102,22 @@ export async function uploadSheet(id, fileBuffer) {
 }
 
 export async function deleteSheet(id) {
-  const song = await getSongById(id); // Throws 404 if missing
+  const song = await getSongById(id);
 
-  if (song.sheetPublicId) {
-    // if replacing an existing sheet, clean up the old Cloudinary asset
+  if (!song.sheetPublicId) {
+    const err = new Error('Song does not have a sheet to delete');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  try {
     await cloudinary.uploader.destroy(song.sheetPublicId, {
       resource_type: song.sheetResourceType,
     });
+  } catch (err) {
+    console.warn(`Failed to destroy Cloudinary asset ${song.sheetPublicId} for song ${id}:`, err.message);
   }
+
   return repertoireModel.updateSong(id, {
     sheetUrl: null,
     sheetPublicId: null,
