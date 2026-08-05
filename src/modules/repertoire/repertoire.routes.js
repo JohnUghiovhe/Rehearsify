@@ -8,7 +8,8 @@ import requireRole from '../../shared/middleware/requireRole.js';
 import { 
   createSongSchema, 
   updateSongSchema, 
-  listSongsQuerySchema // 1. Import it here!
+  listSongsQuerySchema,
+  idParamSchema
 } from './repertoire.schemas.js';
 import {
   createSongHandler,
@@ -28,7 +29,7 @@ router.use(requireAuth);
 // 2. Attach query validation here!
 // Notice requireAuth was removed from listSongsHandler/getSongHandler because router.use(requireAuth) already handles it.
 router.get('/', validate(listSongsQuerySchema, 'query'), listSongsHandler);
-router.get('/:id', getSongHandler);
+router.get('/:id', validate(idParamSchema, 'params'), getSongHandler);
 
 const requireManager = requireRole('ADMINISTRATOR', 'CHOIR_DIRECTOR');
 
@@ -43,11 +44,10 @@ const upload = multer({
 
 // Only directors/admins can add, edit, or remove songs
 router.post('/', requireManager, validate(createSongSchema), createSongHandler);
-router.patch('/:id', requireManager, validate(updateSongSchema), updateSongHandler);
-router.delete('/:id', requireManager, deleteSongHandler);
+router.patch('/:id', requireManager, validate(idParamSchema, 'params'), validate(updateSongSchema), updateSongHandler);
+router.delete('/:id', requireManager, validate(idParamSchema, 'params'), deleteSongHandler);
 // Only choir directors can upload song sheets --> form field must be named "sheet"
-router.post('/:id/sheet', requireManager, upload.single('sheet'), uploadSheetHandler);
+router.post('/:id/sheet', requireManager, validate(idParamSchema, 'params'), upload.single('sheet'), uploadSheetHandler);
 // only choir directors can delete song sheets
-router.delete('/:id/sheet', requireManager, upload.single('sheet'), deleteSheetHandler);
-
+router.delete('/:id/sheet', requireManager, validate(idParamSchema, 'params'), deleteSheetHandler);
 export default router;
