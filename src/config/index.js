@@ -5,7 +5,7 @@
 
 import 'dotenv/config';
 
-const required = ['DATABASE_URL', 'JWT_SECRET'];
+const required = ['DATABASE_URL', 'JWT_SECRET', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
 
 for (const key of required) {
   if (!process.env[key]) {
@@ -28,6 +28,11 @@ const config = {
     apiKey: process.env.EMAIL_API_KEY,
     fromAddress: process.env.EMAIL_FROM_ADDRESS,
   },
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    apiSecret: process.env.CLOUDINARY_API_SECRET,
+  }
 };
 
 export default config;
