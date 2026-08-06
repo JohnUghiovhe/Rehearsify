@@ -1,11 +1,9 @@
-// Thin HTTP layer for performance-history read endpoints.
-
 import * as service from './performance.service.js';
 import { songIdsSchema } from './performance.schemas.js';
 
 export async function getLastPerformedHandler(req, res, next) {
   try {
-    const { songIds } = songIdsSchema.parse(req.body);
+    const { songIds } = songIdsSchema.parse(req.query);
 
     const result = await service.getLastPerformedMap(songIds);
 
@@ -19,7 +17,7 @@ export async function getLastPerformedHandler(req, res, next) {
 
 export async function getPerformanceCountsHandler(req, res, next) {
   try {
-    const { songIds } = songIdsSchema.parse(req.body);
+    const { songIds } = songIdsSchema.parse(req.query);
 
     const result = await service.getPerformanceCounts(songIds);
 
