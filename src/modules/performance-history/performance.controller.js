@@ -1,11 +1,8 @@
 import * as service from './performance.service.js';
-import { songIdsSchema } from './performance.schemas.js';
 
 export async function getLastPerformedHandler(req, res, next) {
   try {
-    const { songIds } = songIdsSchema.parse(req.query);
-
-    const result = await service.getLastPerformedMap(songIds);
+    const result = await service.getLastPerformedMap(req.query.songIds);
 
     res.status(200).json({
       data: result,
@@ -17,9 +14,7 @@ export async function getLastPerformedHandler(req, res, next) {
 
 export async function getPerformanceCountsHandler(req, res, next) {
   try {
-    const { songIds } = songIdsSchema.parse(req.query);
-
-    const result = await service.getPerformanceCounts(songIds);
+    const result = await service.getPerformanceCounts(req.query.songIds);
 
     res.status(200).json({
       data: result,
