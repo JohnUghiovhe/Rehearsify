@@ -23,13 +23,27 @@ export async function createService(data) {
   return prisma.service.create({ data });
 }
 
-export async function findServiceById(id) {
+export async function findServiceById(id, { includePerformances = false } = {}) {
+  const include = {
+    eventType: true,
+    createdBy: {
+      select: {
+        id: true,
+        name: true,
+      },
+    },
+    ...(includePerformances && {
+      performances: {
+        select: {
+          songId: true,
+        },
+      },
+    }),
+  };
+
   return prisma.service.findUnique({
     where: { id },
-    include: {
-      eventType: true,
-      createdBy: { select: { id: true, name: true } },
-    },
+    include,
   });
 }
 
