@@ -14,7 +14,7 @@ const {
  * Returns the number of days since the song was last performed.
  * Songs never performed return Infinity.
  */
-function daysSince(lastPerformed) {
+export function daysSince(lastPerformed) {
   if (!lastPerformed) return Infinity;
 
   const now = Date.now();
@@ -27,7 +27,7 @@ function daysSince(lastPerformed) {
  * Hard rotation filter.
  * Songs performed within the configured window are excluded.
  */
-function isInsideRotationWindow(lastPerformed) {
+export function isInsideRotationWindow(lastPerformed) {
   if (!lastPerformed) return false;
 
   return daysSince(lastPerformed) < rotationWindowDays;
@@ -36,7 +36,7 @@ function isInsideRotationWindow(lastPerformed) {
 /**
  * Season scoring.
  */
-function getSeasonScore(songSeason, serviceSeason) {
+export function getSeasonScore(songSeason, serviceSeason) {
   return songSeason === serviceSeason ? 20 : 0;
 }
 
@@ -44,7 +44,7 @@ function getSeasonScore(songSeason, serviceSeason) {
  * Difficulty scoring.
  * Maximum score when choir skill exactly matches song difficulty.
  */
-function getDifficultyScore(songDifficulty) {
+export function getDifficultyScore(songDifficulty) {
   const difference = Math.abs(songDifficulty - choirSkillLevel);
 
   return Math.max(0, 30 - difference * 10);
@@ -53,15 +53,19 @@ function getDifficultyScore(songDifficulty) {
 /**
  * Never-performed bonus.
  */
-function getNeverPerformedScore(lastPerformed) {
+export function getNeverPerformedScore(lastPerformed) {
   return lastPerformed ? 0 : 30;
 }
 
 /**
  * Performance count bonus.
  * Less frequently used songs score higher.
+ * Never-performed songs are already rewarded by getNeverPerformedScore,
+ * so they are not rewarded twice here.
  */
-function getPerformanceCountScore(count) {
+export function getPerformanceCountScore(count) {
+  if (count === 0) return 0;
+
   return Math.max(0, 20 - count * 2);
 }
 
@@ -69,7 +73,7 @@ function getPerformanceCountScore(count) {
  * Calculates the recommendation score and
  * returns a detailed score breakdown.
  */
-function calculateScore(song, service, lastPerformed, performanceCount) {
+export function calculateScore(song, service, lastPerformed, performanceCount) {
   const seasonScore = getSeasonScore(
     song.season,
     service.season
@@ -111,7 +115,7 @@ function calculateScore(song, service, lastPerformed, performanceCount) {
  * 3. Lowest performance count
  * 4. Alphabetical title
  */
-function compareRecommendations(a, b) {
+export function compareRecommendations(a, b) {
   if (b.score !== a.score) {
     return b.score - a.score;
   }
@@ -130,11 +134,42 @@ function compareRecommendations(a, b) {
   return a.title.localeCompare(b.title);
 }
 
+function buildEmptyResponse(service) {
+  const min =
+    service.minSongCount ?? service.eventType.defaultMinSongs;
+  const max =
+    service.maxSongCount ?? service.eventType.defaultMaxSongs;
 
+  return {
+    serviceId: service.id,
+    minCount: min,
+    requestedCount: max,
+    returnedCount: 0,
+    belowMinimum: min > 0,
+    recommendations: [],
+  };
+}
 
 export async function getRecommendationsForService(serviceId) {
   // Get service (throws 404 if not found)
-  const service = await schedulingService.getService(serviceId);
+  const service = await schedulingService.getService(serviceId, {
+    includePerformances: true,
+  });
+
+  // Only upcoming, unconfirmed services get recommendations
+  if (service.status === 'CONFIRMED') {
+    throw Object.assign(
+      new Error('Cannot recommend songs for a confirmed service'),
+      { statusCode: 400 }
+    );
+  }
+
+  if (new Date(service.date).getTime() <= Date.now()) {
+    throw Object.assign(
+      new Error('Cannot recommend songs for a service that has already taken place'),
+      { statusCode: 400 }
+    );
+  }
 
   // Get all active songs
   const songs = await repertoireService.getAllActiveSongs();
@@ -149,16 +184,15 @@ export async function getRecommendationsForService(serviceId) {
     (song) => !serviceSongIds.has(song.id)
   );
 
+  // Determine min/max once
+  const min =
+    service.minSongCount ?? service.eventType.defaultMinSongs;
+  const max =
+    service.maxSongCount ?? service.eventType.defaultMaxSongs;
+
   // No candidates available
   if (candidateSongs.length === 0) {
-    return {
-      serviceId: service.id,
-      requestedCount:
-        service.maxSongCount ??
-        service.eventType.defaultMaxSongs,
-      returnedCount: 0,
-      recommendations: [],
-    };
+    return buildEmptyResponse(service);
   }
 
   // Candidate song IDs
@@ -180,14 +214,7 @@ export async function getRecommendationsForService(serviceId) {
 
   // Still return empty array if nothing is eligible
   if (eligibleSongs.length === 0) {
-    return {
-      serviceId: service.id,
-      requestedCount:
-        service.maxSongCount ??
-        service.eventType.defaultMaxSongs,
-      returnedCount: 0,
-      recommendations: [],
-    };
+    return buildEmptyResponse(service);
   }
 
   // Score every eligible song
@@ -226,22 +253,22 @@ export async function getRecommendationsForService(serviceId) {
   // Sort recommendations
   recommendations.sort(compareRecommendations);
 
-  // Determine maximum songs
-  const limit =
-    service.maxSongCount ??
-    service.eventType.defaultMaxSongs;
-
   // Return only required number
   const finalRecommendations =
-    recommendations.slice(0, limit);
+    recommendations.slice(0, max);
 
   return {
     serviceId: service.id,
 
-    requestedCount: limit,
+    minCount: min,
+
+    requestedCount: max,
 
     returnedCount:
       finalRecommendations.length,
+
+    belowMinimum:
+      finalRecommendations.length < min,
 
     recommendations: finalRecommendations,
   };

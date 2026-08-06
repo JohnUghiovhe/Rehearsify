@@ -25,9 +25,25 @@ const config = {
   },
 
   recommendation: {
-  choirSkillLevel: Number(process.env.CHOIR_SKILL_LEVEL) || 3,
-  rotationWindowDays: Number(process.env.ROTATION_WINDOW_DAYS) || 42,
-},
+    choirSkillLevel: (() => {
+      const raw = process.env.CHOIR_SKILL_LEVEL;
+      if (raw === undefined) return 3;
+      const parsed = Number(raw);
+      if (!Number.isInteger(parsed) || parsed < 1 || parsed > 5) {
+        throw new Error(`Invalid CHOIR_SKILL_LEVEL: "${raw}" — must be an integer between 1 and 5`);
+      }
+      return parsed;
+    })(),
+    rotationWindowDays: (() => {
+      const raw = process.env.ROTATION_WINDOW_DAYS;
+      if (raw === undefined) return 42;
+      const parsed = Number(raw);
+      if (!Number.isInteger(parsed) || parsed < 1) {
+        throw new Error(`Invalid ROTATION_WINDOW_DAYS: "${raw}" — must be a positive integer`);
+      }
+      return parsed;
+    })(),
+  },
 
   email: {
     apiKey: process.env.EMAIL_API_KEY,
