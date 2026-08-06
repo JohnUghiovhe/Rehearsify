@@ -146,3 +146,9 @@ Kept here so nobody has to re-derive *why* something is the way it is.
 Use GitHub Issues for anything that needs tracking beyond a quick chat message — 
 especially bugs found in someone else's module, or schema change proposals. Tag with the 
 module name so it's easy to filter.
+
+## UPDATES:
+#### Sheet music — current limitations (documented, not blocking):
+
+- One sheetUrl per song. Multi-arrangement support (e.g. SATB + descant) would need either sheetUrls String[] (simple, no metadata) or a SheetMusic model (proper CRUD, needs migration) — **deferred**, *not needed for MVP*.
+- Duplicate-file detection on upload — deferred, needs content hash

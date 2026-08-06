@@ -1,11 +1,22 @@
 import { Router } from 'express';
 
+import validate from '../../shared/middleware/validate.js';
+import requireAuth from '../../shared/middleware/requireAuth.js';
+
+import { getRecommendationsHandler } from './recommendation.controller.js';
+import { serviceIdParamSchema } from './recommendation.schemas.js';
+
 const router = Router();
 
-// GET /api/recommendations/:serviceId -> getRecommendationsForService
+router.use(requireAuth);
 
-router.get('/:serviceId', (req, res) => {
-  res.status(501).json({ error: { message: 'recommendation routes not implemented yet' } });
-});
+/**
+ * GET /api/recommendations/:serviceId
+ */
+router.get(
+  '/:serviceId',
+  validate(serviceIdParamSchema, 'params'),
+  getRecommendationsHandler,
+);
 
 export default router;
