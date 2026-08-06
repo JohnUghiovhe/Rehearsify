@@ -12,6 +12,7 @@ import performanceRoutes from '../modules/performance-history/performance.routes
 import recommendationRoutes from '../modules/recommendation/recommendation.routes.js';
 import planningRoutes from '../modules/planning-reporting/planning.routes.js';
 import healthRoutes from '../modules/health/health.routes.js';
+import jobsRoutes from '../modules/jobs/jobs.routes.js';
 
 const router = Router();
 
@@ -23,5 +24,6 @@ router.use('/services', schedulingRoutes);
 router.use('/performances', performanceRoutes);
 router.use('/recommendations', recommendationRoutes);
 router.use('/plans', planningRoutes);
+router.use('/admin/jobs', jobsRoutes);
 
 export default router;
