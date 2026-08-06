@@ -22,6 +22,7 @@ const config = {
   },
   job: {
     lookaheadDays: Number(process.env.JOB_LOOKAHEAD_DAYS) || 7,
+    cronSchedule: process.env.JOB_CRON_SCHEDULE || '0 18 * * 0',
   },
 
   recommendation: {

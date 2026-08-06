@@ -84,6 +84,50 @@ export async function createDraft(input) {
   }
 }
 
+/**
+ * Creates a planning draft pre-populated with the recommended song IDs, or
+ * updates the existing draft's song list if one already exists. Used by the
+ * weekly planning job so re-runs never create duplicate drafts.
+ *
+ * Manual additions are preserved on update — recommendations only ever own
+ * the songIds list.
+ */
+export async function upsertDraftFromRecommendation({ serviceId, songIds }) {
+  await schedulingService.getService(serviceId);
+
+  const existing = await model.findDraftByServiceId(serviceId);
+  if (existing) {
+    if (existing.deletedAt) {
+      return model.restoreDraft(existing.id, {
+        songIds,
+        manualAdditions: [],
+      });
+    }
+    return model.updateDraft(existing.id, { songIds });
+  }
+
+  try {
+    return await model.createDraft({
+      serviceId,
+      songIds,
+      manualAdditions: [],
+    });
+  } catch (err) {
+    if (err.code === 'P2002' && err.meta?.modelName === 'PlanningDraft') {
+      const draft = await model.findDraftByServiceId(serviceId);
+      if (!draft) throw err;
+      if (draft.deletedAt) {
+        return model.restoreDraft(draft.id, {
+          songIds,
+          manualAdditions: [],
+        });
+      }
+      return model.updateDraft(draft.id, { songIds });
+    }
+    throw err;
+  }
+}
+
 export async function addSongToDraft(draftId, songId) {
   await repertoireService.getSongById(songId);
 
