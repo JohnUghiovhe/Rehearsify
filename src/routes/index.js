@@ -3,7 +3,7 @@
 // modules exist." No other file should import multiple modules' routers.
 
 import { Router } from 'express';
-import prisma from '../shared/db.js';
+
 
 import authRoutes from '../modules/auth/auth.routes.js';
 import repertoireRoutes from '../modules/repertoire/repertoire.routes.js';

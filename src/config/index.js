@@ -23,6 +23,12 @@ const config = {
   job: {
     lookaheadDays: Number(process.env.JOB_LOOKAHEAD_DAYS) || 7,
   },
+
+  recommendation: {
+  choirSkillLevel: Number(process.env.CHOIR_SKILL_LEVEL) || 3,
+  rotationWindowDays: Number(process.env.ROTATION_WINDOW_DAYS) || 42,
+},
+
   email: {
     apiKey: process.env.EMAIL_API_KEY,
     fromAddress: process.env.EMAIL_FROM_ADDRESS,
