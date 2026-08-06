@@ -248,7 +248,7 @@ describe('Weekly Song Planning Job Integration', () => {
     fixtures.push(await createFixture({ songTitles: ['Job Idem A', 'Job Idem B'] }));
     fixtures.push(await createFixture({ songTitles: ['Job Idem C', 'Job Idem D'] }));
 
-    const first = await weeklySongPlanningJob();
+    const first = await weeklySongPlanningJob({ lookaheadDays: LOOKAHEAD_DAYS });
     assert.equal(first.servicesProcessed, 2);
     const serviceIds = fixtures.map((f) => f.serviceId);
 
@@ -256,7 +256,7 @@ describe('Weekly Song Planning Job Integration', () => {
     assert.equal(await prisma.performance.count({ where: { serviceId: { in: serviceIds } } }), 4);
     assert.equal(sentMails.length, 2);
 
-    const second = await weeklySongPlanningJob();
+    const second = await weeklySongPlanningJob({ lookaheadDays: LOOKAHEAD_DAYS });
     assert.equal(second.success, true);
     assert.equal(second.servicesProcessed, 0);
     assert.equal(second.servicesFailed, 0);
@@ -327,7 +327,41 @@ describe('Weekly Song Planning Job Integration', () => {
     assert.equal(sentMails.length, 3, 'retry sends exactly one email for the recovered service');
   });
 
-  it('manual trigger endpoint: rejects unauthenticated and unknown jobs, supports dry-run', async () => {
+  it('email failure: affected services are reported as failed, not confirmed', async () => {
+    const a = await createFixture({ songTitles: ['Job Mail A-1', 'Job Mail A-2'] });
+    const b = await createFixture({ songTitles: ['Job Mail B-1', 'Job Mail B-2'] });
+
+    fakeTransport.shouldFail = true;
+
+    const result = await weeklySongPlanningJob({ lookaheadDays: LOOKAHEAD_DAYS });
+
+    assert.equal(result.success, false);
+    assert.equal(result.status, 'partial');
+    assert.equal(result.servicesProcessed, 0);
+    assert.equal(result.servicesFailed, 2);
+    assert.equal(sentMails.length, 0);
+
+    const failedEntries = result.services.filter((entry) => entry.status === 'failed');
+    assert.equal(failedEntries.length, 2);
+    for (const entry of failedEntries) {
+      assert.equal(entry.emailSent, false);
+      assert.ok(entry.emailError, 'failed email must carry the SMTP error');
+      assert.equal(entry.confirmed, undefined, 'email-failed services must not be reported as confirmed');
+    }
+
+    // confirmDraft commits the scheduling transition before the best-effort
+    // email, so the services themselves end CONFIRMED — the run just must not
+    // claim it processed/confirmed them.
+    assert.equal((await prisma.service.findUnique({ where: { id: a.serviceId } })).status, 'CONFIRMED');
+    assert.equal((await prisma.service.findUnique({ where: { id: b.serviceId } })).status, 'CONFIRMED');
+
+    const jobRun = await latestJobRun();
+    assert.equal(jobRun.status, 'partial');
+    assert.equal(jobRun.servicesProcessed, 0);
+    assert.equal(jobRun.servicesFailed, 2);
+  });
+
+  it('manual trigger endpoint: rejects unauthenticated, unknown jobs, and misspelled params; supports dry-run', async () => {
     const res401 = await request(app).post(`${API}/run?job=${JOB_NAME}`);
     assert.equal(res401.status, 401);
 
@@ -335,6 +369,11 @@ describe('Weekly Song Planning Job Integration', () => {
       .post(`${API}/run?job=not-a-real-job`)
       .set('Authorization', `Bearer ${authToken}`);
     assert.equal(res400.status, 400);
+
+    const resStrict = await request(app)
+      .post(`${API}/run?job=${JOB_NAME}&lookahead=1`)
+      .set('Authorization', `Bearer ${authToken}`);
+    assert.equal(resStrict.status, 400, 'misspelled query params must be rejected');
 
     const resDry = await request(app)
       .post(`${API}/run?job=${JOB_NAME}&dryRun=true&lookaheadDays=1`)

@@ -98,10 +98,7 @@ export async function upsertDraftFromRecommendation({ serviceId, songIds }) {
   const existing = await model.findDraftByServiceId(serviceId);
   if (existing) {
     if (existing.deletedAt) {
-      return model.restoreDraft(existing.id, {
-        songIds,
-        manualAdditions: [],
-      });
+      return model.restoreDraft(existing.id, { songIds });
     }
     return model.updateDraft(existing.id, { songIds });
   }
@@ -117,10 +114,7 @@ export async function upsertDraftFromRecommendation({ serviceId, songIds }) {
       const draft = await model.findDraftByServiceId(serviceId);
       if (!draft) throw err;
       if (draft.deletedAt) {
-        return model.restoreDraft(draft.id, {
-          songIds,
-          manualAdditions: [],
-        });
+        return model.restoreDraft(draft.id, { songIds });
       }
       return model.updateDraft(draft.id, { songIds });
     }

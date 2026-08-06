@@ -25,7 +25,7 @@ const registeredTasks = new Map();
  */
 export function startScheduler({ schedule = DEFAULT_SCHEDULE, job = weeklySongPlanningJob, name = JOB_NAME } = {}) {
   if (registeredTasks.has(name)) {
-    registeredTasks.get(name).stop();
+    registeredTasks.get(name).destroy();
     registeredTasks.delete(name);
   }
 
@@ -53,7 +53,7 @@ export function startScheduler({ schedule = DEFAULT_SCHEDULE, job = weeklySongPl
 /** Stops every task this scheduler registered. */
 export function stopScheduler() {
   for (const task of registeredTasks.values()) {
-    task.stop();
+    task.destroy();
   }
   registeredTasks.clear();
 }

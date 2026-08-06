@@ -30,8 +30,15 @@ describe('Scheduler', () => {
   });
 
   it('replaces a previously registered task with the same name', () => {
-    startScheduler({ job: async () => ({}), name: 'foo' });
+    const original = startScheduler({ job: async () => ({}), name: 'foo' });
     startScheduler({ job: async () => ({}), name: 'foo' });
     assert.deepEqual(getScheduledTasks(), ['foo']);
+    assert.equal(original.task.getStatus(), 'destroyed', 'replaced task must be destroyed');
+  });
+
+  it('stopScheduler destroys every registered task', () => {
+    const { task } = startScheduler();
+    stopScheduler();
+    assert.equal(task.getStatus(), 'destroyed', 'shut-down task must be destroyed');
   });
 });
