@@ -17,6 +17,7 @@ let happySvcId;
 let recFailSvcId;
 let emailFailSvcId;
 let partialSvcId;
+let concurrentSvcId;
 let pastSvcId;
 let songA;
 let songB;
@@ -25,6 +26,7 @@ let happyDraftId;
 let recFailDraftId;
 let emailFailDraftId;
 let partialDraftId;
+let concurrentDraftId;
 let pastDraftId;
 const createdServiceIds = [];
 const createdSongIds = [];
@@ -127,6 +129,7 @@ describe('Confirm Draft Integration', () => {
     recFailSvcId = await createService(new Date(now.getTime() + 21 * 86400000));
     emailFailSvcId = await createService(new Date(now.getTime() + 28 * 86400000));
     partialSvcId = await createService(new Date(now.getTime() + 35 * 86400000));
+    concurrentSvcId = await createService(new Date(now.getTime() + 42 * 86400000));
     pastSvcId = await createService(new Date(now.getTime() - 7 * 86400000));
 
     songA = await createSong(`Confirm A ${Date.now()}`);
@@ -137,6 +140,7 @@ describe('Confirm Draft Integration', () => {
     recFailDraftId = await createDraftAndAddSongs(recFailSvcId, [songA]);
     emailFailDraftId = await createDraftAndAddSongs(emailFailSvcId, [songA]);
     partialDraftId = await createDraftAndAddSongs(partialSvcId, [songA, songB]);
+    concurrentDraftId = await createDraftAndAddSongs(concurrentSvcId, [songA, songB]);
     pastDraftId = await createDraftAndAddSongs(pastSvcId, [songA]);
   });
 
@@ -288,5 +292,26 @@ describe('Confirm Draft Integration', () => {
       select: { songId: true },
     });
     assert.deepEqual(performances.map((p) => p.songId).sort(), [songA, songB].sort());
+  });
+
+  it('concurrent confirms: one succeeds, one conflicts, only one set of performance rows', async () => {
+    const results = await Promise.allSettled([
+      planningService.confirmDraft(concurrentDraftId),
+      planningService.confirmDraft(concurrentDraftId),
+    ]);
+
+    const fulfilled = results.filter((r) => r.status === 'fulfilled');
+    const rejected = results.filter((r) => r.status === 'rejected');
+    assert.equal(fulfilled.length, 1);
+    assert.equal(rejected.length, 1);
+    assert.equal(fulfilled[0].value.success, true);
+    assert.equal(rejected[0].reason.statusCode, 409);
+    assert.equal(rejected[0].reason.message, 'Service already confirmed');
+
+    // DB state: exactly one set of performance rows, service locked once
+    const perfCount = await prisma.performance.count({ where: { serviceId: concurrentSvcId } });
+    assert.equal(perfCount, 2);
+    const service = await prisma.service.findUnique({ where: { id: concurrentSvcId } });
+    assert.equal(service.status, 'CONFIRMED');
   });
 });
