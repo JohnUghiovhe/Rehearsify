@@ -28,7 +28,17 @@ export async function findServiceById(id) {
     where: { id },
     include: {
       eventType: true,
-      createdBy: { select: { id: true, name: true } },
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      performances: {
+        select: {
+          songId: true,
+        },
+      },
     },
   });
 }

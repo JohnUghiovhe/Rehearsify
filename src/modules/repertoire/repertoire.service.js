@@ -124,3 +124,6 @@ export async function deleteSheet(id) {
     sheetResourceType: null,
   });
 }
+export async function getAllActiveSongs() {
+  return repertoireModel.findSongs({ active: true });
+}
