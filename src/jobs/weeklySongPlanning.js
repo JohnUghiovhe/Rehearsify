@@ -103,12 +103,19 @@ export async function weeklySongPlanningJob(options = {}) {
         const result = await confirmer(draft.id, { recommendationFetcher });
         entry.emailSent = result.emailSent;
         entry.emailError = result.emailError ?? null;
-        entry.confirmed = true;
-        push(
-          `${tag}   Confirmed ${serviceName} (status -> CONFIRMED, email ${result.emailSent ? 'sent' : 'failed'})`,
-        );
 
-        servicesProcessed += 1;
+        if (result.emailSent) {
+          entry.confirmed = true;
+          push(`${tag}   Confirmed ${serviceName} (status -> CONFIRMED, email sent)`);
+          servicesProcessed += 1;
+        } else {
+          servicesFailed += 1;
+          entry.status = 'failed';
+          entry.error = result.emailError ?? 'confirmation email failed';
+          push(
+            `${tag}   FAILED ${serviceName}: confirmation email not sent (${result.emailError ?? 'unknown error'})`,
+          );
+        }
       } catch (err) {
         servicesFailed += 1;
         entry.status = 'failed';
