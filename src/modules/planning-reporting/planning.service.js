@@ -361,20 +361,24 @@ export async function confirmDraft(draftId, options = {}) {
       throw Object.assign(new Error('Recommendation unavailable'), { statusCode: 502 });
     }
 
-    const confirmedService = await tx.service.update({
-      where: { id: service.id },
+    // Conditional transition: only a service still in DRAFT can flip to
+    // CONFIRMED. This closes the read-then-write race where two concurrent
+    // confirms both pass the status check above — the first update wins,
+    // the second affects 0 rows and conflicts.
+    const updateResult = await tx.service.updateMany({
+      where: { id: service.id, status: 'DRAFT' },
       data: { status: 'CONFIRMED' },
-      include: {
-        eventType: true,
-        createdBy: { select: { id: true, name: true, email: true } },
-      },
     });
+
+    if (updateResult.count === 0) {
+      throw Object.assign(new Error('Service already confirmed'), { statusCode: 409 });
+    }
 
     if (confirmedSongIds.length > 0) {
       await performanceService.logPerformances(service.id, confirmedSongIds, tx);
     }
 
-    return { service: confirmedService, recommendation };
+    return { service: { ...service, status: 'CONFIRMED' }, recommendation };
   });
 
   const { emailSent, emailError } = await sendConfirmationEmail({
