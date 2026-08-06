@@ -1,6 +1,7 @@
 export {
   fetchService,
   createDraft,
+  upsertDraftFromRecommendation,
   addSongToDraft,
   removeSongFromDraft,
   getDraft,
