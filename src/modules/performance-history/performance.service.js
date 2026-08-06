@@ -3,10 +3,11 @@
 
 import * as model from './performance.model.js';
 
-export async function logPerformances(serviceId, songIds) {
+export async function logPerformances(serviceId, songIds, tx) {
   const performedDate = new Date();
   return model.createManyPerformances(
-    songIds.map((songId) => ({ serviceId, songId, performedDate }))
+    songIds.map((songId) => ({ serviceId, songId, performedDate })),
+    tx,
   );
 }
 

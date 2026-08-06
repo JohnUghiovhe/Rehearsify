@@ -8,4 +8,5 @@ export {
   listDrafts,
   cloneDraft,
   clearDraft,
+  confirmDraft,
 } from './planning.service.js';
