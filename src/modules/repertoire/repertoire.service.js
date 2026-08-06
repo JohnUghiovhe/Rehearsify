@@ -53,3 +53,7 @@ export async function softDeleteSong(id) {
   await getSongById(id); // Throws 404 if missing
   return repertoireModel.softDeleteSong(id);
 }
+
+export async function getAllActiveSongs() {
+  return repertoireModel.findSongs({ active: true });
+}
