@@ -1,6 +1,9 @@
 import * as model from './planning.model.js';
 import * as schedulingService from '../scheduling/index.js';
 import * as repertoireService from '../repertoire/repertoire.service.js';
+import * as recommendationService from '../recommendation/recommendation.service.js';
+import * as performanceService from '../performance-history/performance.service.js';
+import { sendDraftConfirmation } from '../../shared/email/mailer.js';
 import prisma from '../../shared/db.js';
 
 const DURATION_BY_DIFFICULTY = { 1: 120, 2: 180, 3: 240, 4: 300, 5: 360 };
@@ -76,6 +79,44 @@ export async function createDraft(input) {
   } catch (err) {
     if (err.code === 'P2002' && err.meta?.modelName === 'PlanningDraft') {
       throw Object.assign(new Error('Draft already exists for this service'), { statusCode: 409 });
+    }
+    throw err;
+  }
+}
+
+/**
+ * Creates a planning draft pre-populated with the recommended song IDs, or
+ * updates the existing draft's song list if one already exists. Used by the
+ * weekly planning job so re-runs never create duplicate drafts.
+ *
+ * Manual additions are preserved on update — recommendations only ever own
+ * the songIds list.
+ */
+export async function upsertDraftFromRecommendation({ serviceId, songIds }) {
+  await schedulingService.getService(serviceId);
+
+  const existing = await model.findDraftByServiceId(serviceId);
+  if (existing) {
+    if (existing.deletedAt) {
+      return model.restoreDraft(existing.id, { songIds });
+    }
+    return model.updateDraft(existing.id, { songIds });
+  }
+
+  try {
+    return await model.createDraft({
+      serviceId,
+      songIds,
+      manualAdditions: [],
+    });
+  } catch (err) {
+    if (err.code === 'P2002' && err.meta?.modelName === 'PlanningDraft') {
+      const draft = await model.findDraftByServiceId(serviceId);
+      if (!draft) throw err;
+      if (draft.deletedAt) {
+        return model.restoreDraft(draft.id, { songIds });
+      }
+      return model.updateDraft(draft.id, { songIds });
     }
     throw err;
   }
@@ -264,4 +305,133 @@ export async function clearDraft(draftId) {
   assertDraftActive(draft);
 
   return model.updateDraftSongs(draftId, [], []);
+}
+
+async function sendConfirmationEmail({ draft, confirmedSongIds, service }) {
+  try {
+    const songs = await model.findSongsByIds(confirmedSongIds);
+    const enrichedSongs = confirmedSongIds
+      .map((id) => {
+        const song = songs.find((s) => s.id === id);
+        return song
+          ? {
+              songId: song.id,
+              title: song.title,
+              duration: estimateDuration(song.difficulty),
+              difficulty: song.difficulty,
+            }
+          : null;
+      })
+      .filter(Boolean);
+
+    const totalDuration = enrichedSongs.reduce((sum, s) => sum + s.duration, 0);
+
+    await sendDraftConfirmation(service.createdBy.email, {
+      serviceName: service.eventType?.name ?? 'Service',
+      serviceDate: service.date,
+      songs: enrichedSongs,
+      totalDuration,
+      choirName: service.createdBy?.name ?? 'Rehearsify',
+      appLink: '#',
+    });
+
+    return { emailSent: true, emailError: null };
+  } catch (err) {
+    // Email is best-effort and sent AFTER the DB commit, so a failure here
+    // must NOT roll back the confirmation (the critical writes already happened).
+    console.error(
+      `[confirmDraft] Confirmation email failed for draft ${draft.id}: ${err.message}`,
+    );
+    return { emailSent: false, emailError: err.message };
+  }
+}
+
+/**
+ * Confirms a draft and atomically:
+ *  1. Fetches the latest recommendation for the draft's service.
+ *  2. Locks the songs into Scheduling (service status -> CONFIRMED).
+ *  3. Logs the draft's songs into Performance History.
+ * All three happen inside ONE transaction — any failure rolls them all back.
+ * The confirmation email is sent AFTER commit and never triggers a rollback.
+ *
+ * @param {string} draftId
+ * @param {{ recommendationFetcher?: (serviceId: string) => Promise<object> }} [options]
+ *   Injectable recommendation fetcher — lets tests simulate the recommendation
+ *   endpoint being down or returning partial data.
+ */
+export async function confirmDraft(draftId, options = {}) {
+  const fetchRecommendation =
+    options.recommendationFetcher ?? recommendationService.getRecommendationsForService;
+
+  const draft = await model.findDraftById(draftId);
+  assertDraftActive(draft);
+
+  // The draft's songs are the source of truth for what gets locked/confirmed.
+  const confirmedSongIds = [...new Set([...draft.songIds, ...draft.manualAdditions])];
+
+  const { service, recommendation } = await prisma.$transaction(async (tx) => {
+    const service = await tx.service.findUnique({
+      where: { id: draft.serviceId },
+      include: {
+        eventType: true,
+        createdBy: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    if (!service || service.deletedAt) {
+      throw Object.assign(new Error('Service not found'), { statusCode: 404 });
+    }
+    if (service.status === 'CONFIRMED') {
+      throw Object.assign(new Error('Service already confirmed'), { statusCode: 409 });
+    }
+    if (new Date(service.date).getTime() <= Date.now()) {
+      throw Object.assign(
+        new Error('Cannot confirm a service that has already taken place'),
+        { statusCode: 400 },
+      );
+    }
+
+    let recommendation;
+    try {
+      recommendation = await fetchRecommendation(service.id);
+    } catch (err) {
+      if (err && err.statusCode && err.statusCode < 500) throw err;
+      throw Object.assign(new Error('Recommendation unavailable'), { statusCode: 502 });
+    }
+
+    // Conditional transition: only a service still in DRAFT can flip to
+    // CONFIRMED. This closes the read-then-write race where two concurrent
+    // confirms both pass the status check above — the first update wins,
+    // the second affects 0 rows and conflicts.
+    const updateResult = await tx.service.updateMany({
+      where: { id: service.id, status: 'DRAFT' },
+      data: { status: 'CONFIRMED' },
+    });
+
+    if (updateResult.count === 0) {
+      throw Object.assign(new Error('Service already confirmed'), { statusCode: 409 });
+    }
+
+    if (confirmedSongIds.length > 0) {
+      await performanceService.logPerformances(service.id, confirmedSongIds, tx);
+    }
+
+    return { service: { ...service, status: 'CONFIRMED' }, recommendation };
+  });
+
+  const { emailSent, emailError } = await sendConfirmationEmail({
+    draft,
+    confirmedSongIds,
+    service,
+  });
+
+  return {
+    success: true,
+    draftId: draft.id,
+    serviceId: draft.serviceId,
+    confirmedSongIds,
+    recommendation: recommendation ?? null,
+    emailSent,
+    emailError,
+  };
 }

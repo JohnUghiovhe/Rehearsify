@@ -1,6 +1,7 @@
 export {
   fetchService,
   createDraft,
+  upsertDraftFromRecommendation,
   addSongToDraft,
   removeSongFromDraft,
   getDraft,
@@ -8,4 +9,5 @@ export {
   listDrafts,
   cloneDraft,
   clearDraft,
+  confirmDraft,
 } from './planning.service.js';
