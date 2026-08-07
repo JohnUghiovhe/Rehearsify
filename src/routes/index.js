@@ -1,9 +1,5 @@
-// Mounts every module's router at its prefix.
-// Per the Build Guide: "This is the only file that needs to know all six
-// modules exist." No other file should import multiple modules' routers.
-
+// routes/index.js
 import { Router } from 'express';
-import prisma from '../shared/db.js';
 
 import authRoutes from '../modules/auth/auth.routes.js';
 import repertoireRoutes from '../modules/repertoire/repertoire.routes.js';
@@ -11,6 +7,7 @@ import schedulingRoutes from '../modules/scheduling/scheduling.routes.js';
 import performanceRoutes from '../modules/performance-history/performance.routes.js';
 import recommendationRoutes from '../modules/recommendation/recommendation.routes.js';
 import planningRoutes from '../modules/planning-reporting/planning.routes.js';
+import reportingRoutes from '../modules/planning-reporting/reporting.routes.js';
 import healthRoutes from '../modules/health/health.routes.js';
 
 const router = Router();
@@ -23,5 +20,6 @@ router.use('/services', schedulingRoutes);
 router.use('/performances', performanceRoutes);
 router.use('/recommendations', recommendationRoutes);
 router.use('/plans', planningRoutes);
+router.use('/reports', reportingRoutes);
 
 export default router;
