@@ -106,3 +106,22 @@ model PlanningDraft {
   @@index([createdAt])
   @@index([deletedAt])
 }
+
+model JobRun {
+  id                String   @id @default(uuid())
+  jobName           String
+  status            String
+  servicesProcessed Int      @default(0)
+  servicesSkipped   Int      @default(0)
+  servicesFailed    Int      @default(0)
+  dryRun            Boolean  @default(false)
+  error             String?
+  logs              Json?
+  startedAt         DateTime @default(now())
+  completedAt       DateTime?
+  createdAt         DateTime @default(now())
+
+  @@index([jobName])
+  @@index([startedAt])
+}
+

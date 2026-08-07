@@ -89,3 +89,12 @@ export async function clearDraftHandler(req, res, next) {
     next(err);
   }
 }
+
+export async function confirmDraftHandler(req, res, next) {
+  try {
+    const result = await service.confirmDraft(req.params.draftId);
+    res.status(200).json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+}

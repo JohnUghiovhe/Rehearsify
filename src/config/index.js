@@ -22,11 +22,47 @@ const config = {
   },
   job: {
     lookaheadDays: Number(process.env.JOB_LOOKAHEAD_DAYS) || 7,
+    cronSchedule: process.env.JOB_CRON_SCHEDULE || '0 18 * * 0',
   },
+
+  recommendation: {
+    choirSkillLevel: (() => {
+      const raw = process.env.CHOIR_SKILL_LEVEL;
+      if (raw === undefined) return 3;
+      const parsed = Number(raw);
+      if (!Number.isInteger(parsed) || parsed < 1 || parsed > 5) {
+        throw new Error(`Invalid CHOIR_SKILL_LEVEL: "${raw}" — must be an integer between 1 and 5`);
+      }
+      return parsed;
+    })(),
+    rotationWindowDays: (() => {
+      const raw = process.env.ROTATION_WINDOW_DAYS;
+      if (raw === undefined) return 42;
+      const parsed = Number(raw);
+      if (!Number.isInteger(parsed) || parsed < 1) {
+        throw new Error(`Invalid ROTATION_WINDOW_DAYS: "${raw}" — must be a positive integer`);
+      }
+      return parsed;
+    })(),
+  },
+
   email: {
-    // filled in once we pick an email provider in the Planning/Job blocks
     apiKey: process.env.EMAIL_API_KEY,
     fromAddress: process.env.EMAIL_FROM_ADDRESS,
+    smtp: {
+      host: process.env.SMTP_HOST,
+      port: (() => {
+        const raw = process.env.SMTP_PORT;
+        if (!raw) return undefined;
+        const parsed = Number(raw);
+        if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
+          throw new Error(`Invalid SMTP_PORT: "${raw}" — must be an integer between 1 and 65535`);
+        }
+        return parsed;
+      })(),
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
   },
   cloudinary: {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME,

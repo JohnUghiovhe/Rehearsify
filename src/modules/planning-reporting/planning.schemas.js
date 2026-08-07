@@ -9,6 +9,10 @@ export const cloneDraftSchema = z.object({
   targetServiceId: z.string().uuid('Invalid target service ID'),
 });
 
+export const draftIdParamSchema = z.object({
+  draftId: z.string().uuid('Invalid draft ID'),
+});
+
 const sortFieldEnum = z.enum(['createdAt', 'serviceDate', 'songCount']);
 const sortOrderEnum = z.enum(['asc', 'desc']);
 

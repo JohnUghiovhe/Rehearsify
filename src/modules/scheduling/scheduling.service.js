@@ -10,7 +10,7 @@ const AUTHORIZED_ROLES = new Set(['ADMINISTRATOR', 'CHOIR_DIRECTOR']);
 function assertAuthorized(service, actor) {
   if (service.createdById === actor.id) return;
   if (AUTHORIZED_ROLES.has(actor.role)) return;
-  throw Object.assign(new Error('Not authorized to modify this service'), { status: 403 });
+  throw Object.assign(new Error('Not authorized to modify this service'), { statusCode: 403 });
 }
 
 export async function createService(input) {
@@ -18,7 +18,7 @@ export async function createService(input) {
 
   const eventType = await model.findEventTypeById(validated.eventTypeId);
   if (!eventType) {
-    throw Object.assign(new Error('EventType not found'), { status: 404 });
+    throw Object.assign(new Error('EventType not found'), { statusCode: 404 });
   }
 
   return model.createService({
@@ -31,10 +31,10 @@ export async function createService(input) {
   });
 }
 
-export async function getService(serviceId) {
-  const service = await model.findServiceById(serviceId);
+export async function getService(serviceId, options = {}) {
+  const service = await model.findServiceById(serviceId, options);
   if (!service || service.deletedAt) {
-    throw Object.assign(new Error('Service not found'), { status: 404 });
+    throw Object.assign(new Error('Service not found'), { statusCode: 404 });
   }
   return service;
 }
@@ -46,7 +46,7 @@ export async function listServices(filters) {
 export async function updateService(serviceId, updates, actor) {
   const service = await model.findServiceById(serviceId);
   if (!service || service.deletedAt) {
-    throw Object.assign(new Error('Service not found'), { status: 404 });
+    throw Object.assign(new Error('Service not found'), { statusCode: 404 });
   }
   assertAuthorized(service, actor);
   const schema = createMergedUpdateSchema(service);
@@ -57,7 +57,7 @@ export async function updateService(serviceId, updates, actor) {
 export async function deleteService(serviceId, actor) {
   const service = await model.findServiceById(serviceId);
   if (!service || service.deletedAt) {
-    throw Object.assign(new Error('Service not found'), { status: 404 });
+    throw Object.assign(new Error('Service not found'), { statusCode: 404 });
   }
   assertAuthorized(service, actor);
   return model.softDeleteService(serviceId);
@@ -66,14 +66,14 @@ export async function deleteService(serviceId, actor) {
 export async function updateServiceStatus(serviceId, newStatus, actor) {
   const service = await model.findServiceById(serviceId);
   if (!service || service.deletedAt) {
-    throw Object.assign(new Error('Service not found'), { status: 404 });
+    throw Object.assign(new Error('Service not found'), { statusCode: 404 });
   }
   assertAuthorized(service, actor);
   if (service.status === 'CONFIRMED') {
-    throw Object.assign(new Error('Cannot change status of a confirmed service'), { status: 400 });
+    throw Object.assign(new Error('Cannot change status of a confirmed service'), { statusCode: 400 });
   }
   if (newStatus !== 'CONFIRMED') {
-    throw Object.assign(new Error('Only CONFIRMED is a valid status transition from DRAFT'), { status: 400 });
+    throw Object.assign(new Error('Only CONFIRMED is a valid status transition from DRAFT'), { statusCode: 400 });
   }
   return model.updateService(serviceId, { status: 'CONFIRMED' });
 }
