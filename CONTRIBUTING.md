@@ -152,3 +152,5 @@ module name so it's easy to filter.
 
 - One sheetUrl per song. Multi-arrangement support (e.g. SATB + descant) would need either sheetUrls String[] (simple, no metadata) or a SheetMusic model (proper CRUD, needs migration) — **deferred**, *not needed for MVP*.
 - Duplicate-file detection on upload — deferred, needs content hash
+
+*"Cross-module imports use two patterns inconsistently — some via module's index.js barrel (scheduling, planning), some direct to .service.js (repertoire, performance-history). Pick one convention post-capstone; both are functionally safe."
